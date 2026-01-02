@@ -3,7 +3,6 @@
 #include <string.h>
 #include<time.h>
 #define TAILLE_TABLE 13
-
 //Creation des structures Produit et liste des produits et table de hachage
 typedef struct Produit {
     int id;
@@ -14,19 +13,19 @@ typedef struct Produit {
     struct Produit *precedent;
     struct Produit *nextHach;
 } Produit;
+//Declaration de la structure de la liste
 typedef struct Liste{
     Produit *tete;
     Produit *queue;
     int nbr_Produit;
 }Liste;
+//Declaration de la structure de tableau de hachage
 typedef struct {
     Produit *table[TAILLE_TABLE];
 } TableHachage;
-
-Liste *Li=NULL;
-TableHachage *table;
-//__________________________________________________________________________________________________
-
+Liste *Li=NULL;//declaration de la liste comme variable globale
+TableHachage *table;//declaration de tableau d'hachage comme variable globale
+//=========================================================================
 //Creation des structures Client et l'arbre binaire et file
 typedef struct Client {
  int id;
@@ -35,24 +34,26 @@ typedef struct Client {
  struct Client *gauche;
  struct Client *droite;
 }Client;
+//Declaration de la structure
 typedef struct ElementClient{
     Client *El_Client;
     struct ElementClient *suivant;
 }ElementClient;
+//Declaration de la structure de la file
 typedef struct{
     ElementClient *tete;
     ElementClient *queue;
     int taille;
 }File;
+// declaration de la structure d'arbre du client
 typedef struct Arbre_Client{
     Client *racine;
 }Arbre_Client;
-
+// declaration de l'arbre du client et la file  comme variable globaux avec initialisation
 Arbre_Client *Ar = NULL;
 File *file = NULL;
 //________________________________________________________________
-
-//Creation des structures Transaction et la pile
+//declaration  de structure Transaction et la pile
 typedef struct Transaction {
     int idClient;
     int idProduit;
@@ -65,13 +66,14 @@ typedef struct {
     Transaction *tete;
     int taille_Pile;
 } Pile;
+// declaration de la pile commme variable globale avec initialisation
 Pile *p=NULL;
-//_______________________________________________________________
-
 //Creation de la table de hachage pour le stockage des produits
+// la fonction de hachage
 int hachage(int id) {
     return id % TAILLE_TABLE;
-    }
+}
+// fonction pour initiliser la table d'hachage
  void initialiser_table_hachage() {
     table = (TableHachage*)malloc(sizeof(TableHachage));
     if (table == NULL) {
@@ -81,11 +83,13 @@ int hachage(int id) {
     for (int i = 0; i < TAILLE_TABLE; i++)
         table->table[i] = NULL;
     }
+
+//fonction pour rechercher produit dans table de hachage
     Produit *rechercher_par_ID(int id){
-    int index=hachage(id);
+    int index=hachage(id);//recuperation d'indice de produit a chercher
     if (index < 0 || index >= TAILLE_TABLE) {
         perror( "Erreur interne: Index de hachage invalide");
-        return NULL;
+        return NULL;//stop le prog
     }
     Produit *P=table->table[index];
     while(P!=NULL){
@@ -95,68 +99,76 @@ int hachage(int id) {
     return NULL;
 }
 //-------------------------------------------------------------------------------------------
-
+ //fonction pour creation d'un nouveau produit
  Produit* creer_produit(){
     Produit* P= (Produit*)malloc(sizeof(Produit));//Allocation dynamique
     if(P==NULL){
         perror("Erreur d'allocation !");
         return NULL;
     }
-    printf("ID (ID>0) : ");
+    printf("ID (ID>0) : ");// ID de produit doit ete positive
     do {
         scanf("%d", &P->id);
-        if(P->id <= 0) printf("ID doit strictement positif ; VEUILLEZ RESSAYER: ",P->id);
-        if(rechercher_par_ID(P->id)!=NULL) printf("Le produit d'ID:%d existe deja dans la liste ; VEUILLEZ RESSAYER:",P->id);
+        if(P->id <= 0) printf("ID doit strictement positif ; VEUILLEZ RESSAYER: \n");
+        if(rechercher_par_ID(P->id)!=NULL) //recherche si ID existe deja
+        printf("Le produit d'ID:%d existe deja dans la liste ; VEUILLEZ RESSAYER:\n",P->id);
     } while(P->id <= 0 || rechercher_par_ID(P->id)!=NULL);
     printf("Nom : ");
     scanf("%s",P->nom);
-    printf("Prix(Prix >0) : ");
+    printf("Prix(Prix >0) : ");// le prix doit etre strictement positif
     do {
         scanf("%f", &P->prix);
-        if(P->prix <= 0) printf("Prix doit etre strictement positif; VEUILLEZ RESSAYER: ");
+        if(P->prix <= 0)
+        printf("Prix doit etre strictement positif; VEUILLEZ RESSAYER: \n");
     } while(P->prix <= 0);
+    //recuperation de la qte
     printf("Quantite : ");
     do {
         scanf("%d", &P->quantite);
-        if(P->quantite < 0) printf("Quantite doit etre strictement positif; VEUILLEZ RESSAYER: ");
+        if(P->quantite < 0)
+        printf("Quantite doit etre strictement positif; VEUILLEZ RESSAYER: \n");
     } while(P->quantite < 0);
     P->suivant=NULL;
     P->precedent=NULL;
     P->nextHach=NULL;
     return(P);
 }
+// fonction pour creer la liste des produits
 Liste * CreerListe_Produits(){
     Liste *nv_liste = (Liste*) malloc(sizeof(Liste));  // Allocation dynamique
-    if(nv_liste==NULL){
+    if(nv_liste==NULL){//test d'allocation
         perror("Erreur allocation liste");
         return NULL;
     }
+    //initialisation de la structure de controle
     nv_liste->tete = NULL;
     nv_liste->queue = NULL;
     nv_liste->nbr_Produit = 0;
     return nv_liste;
 }
+//fonction pour inserer les produits dans le tableau de hachage
 void insererHachage(Produit*P){
     if (P == NULL || table==NULL) {
         perror("Erreur d'allocation de la table de hachage.\n");
         return;
     }
-    int index=hachage(P->id);
+    int index=hachage(P->id);//recuperation d'indice grace au fonction de hachage
     P->nextHach=table->table[index];
-    table->table[index]=P;
+    table->table[index]=P;//insertion du produit
 }
-//Ajout au debut
+
+//fonction pour ajouter un produit au debut de la liste
 void ajouter_produit_liste(Produit* P){
     if(Li == NULL || P == NULL ){
         perror("Erreur allocation du produit ou de la liste\n ");
         return ;
     }
-    insererHachage(P);
-    if(Li ->tete == NULL){/*cas de la liste vide*/
+    insererHachage(P);//chaque produit inserer dans la liste est inserer ainsi dans tab hachage
+    if(Li ->tete == NULL){//cas d'une liste vide
         Li -> tete=P;
         Li ->queue=P;
     }
-    else{//cas de la liste non vide
+    else{    //cas de la liste non vide
         P->precedent = Li->queue;
         Li->queue-> suivant=P;
         Li->queue=P;
@@ -164,30 +176,32 @@ void ajouter_produit_liste(Produit* P){
     }
     Li->nbr_Produit++;
 }
+//fonction pour rechercher un produit par son nom
 Produit* rechercher_par_nom(const char* nom){
     if(Li == NULL || Li->tete == NULL || nom == NULL) {
         perror("Erreur de recherche: Liste ou nom invalide.");
         return NULL;
     }
-    Produit* p = Li->tete;
+    Produit* p = Li->tete; //recherche dans la liste
     while(p != NULL){
-        if(strcmp(p->nom, nom) == 0) return p;
+        if(strcmp(p->nom, nom) == 0) return p;//produit existe
         p = p->suivant;
     }
+    //produit n'existe pas dans la liste
     printf("Produit du nom %s introuvable.\n", nom);
     return NULL;
 }
-
+//fonction pour supprimer produit du tableau de hachage
 void supprimerHachage(int id){
     int index=hachage(id);
     if (index < 0 || index >= TAILLE_TABLE) {
         perror("Erreur interne: Index de hachage est invalide\n");
         return ;
     }
-    Produit *courant=table->table[index];
+    Produit *courant=table->table[index]; //pour parcour de la liste dans la case du tab de hachage
     Produit *prec=NULL;
     while(courant!=NULL){
-        if(courant->id==id) {
+        if(courant->id==id) { //cas du premier element de la liste de cette case
             if(prec==NULL){
                 table->table[index]=courant->nextHach;
             }
@@ -201,10 +215,11 @@ void supprimerHachage(int id){
         prec=courant;
         courant=courant->nextHach;
     }
-    printf("Produit ID:%d introuvable\n", id);
+    printf("Produit ID:%d introuvable\n", id);//produit existe pas dans tab hach
 }
+//fonction pour supprimer le produit du de la liste
 void supprimer_produit_liste(int id){
-    if(!Li ) {
+    if(!Li ){
         perror("Liste vide rien a supprime\n");
         return;
     }
@@ -214,7 +229,7 @@ void supprimer_produit_liste(int id){
     }
     Produit *p = rechercher_par_ID(id);
     if(p!=NULL){// si on a un seul elemnet dans la liste
-        supprimerHachage(p->id);
+        supprimerHachage(p->id);//on supprime du tableau de hachage
         if(Li->nbr_Produit==1){
             Li->tete=NULL;
             Li->queue=NULL;
@@ -231,17 +246,20 @@ void supprimer_produit_liste(int id){
             p->precedent->suivant=p->suivant;// Suivant précédent = suivant
             p->suivant->precedent=p->precedent;// Précédent suivant = précédent
         }
+        printf("la suppression dans la liste a reussi \n");
         free(p);
         Li->nbr_Produit--;
     }
+    //si l'element n'existe pas
     else{printf("ce produit est introuvable.\n");}
 }
+//fonction pour trier le produit tri a bulle
 void trier_liste_produits(){
     if (Li == NULL || Li->tete == NULL || Li->tete->suivant == NULL) {
         perror("Liste vide ou avec un seul élément - pas de tri nécessaire\n");
         return;
     }
-    Produit *compt1 , *compt2;
+    Produit *compt1 , *compt2;//pointeurs pour parcourus la liste
     float tempprix;
     char tempnom[30];
     int tempquant;
@@ -252,15 +270,15 @@ void trier_liste_produits(){
                 strcpy(tempnom,compt1->nom);
                 strcpy(compt1->nom,compt2->nom);
                 strcpy(compt2->nom,tempnom);
-
+// change les prix des produits
                 tempprix=compt1->prix;
                 compt1->prix=compt2->prix;
                 compt2->prix=tempprix;
-
+//change les qtes des produits
                 tempquant=compt1->quantite;
                 compt1->quantite=compt2->quantite;
                 compt2->quantite=tempquant;
-
+//chnge's le identificteurs des produits
                 tempid=compt1->id;
                 compt1->id=compt2->id;
                 compt2->id=tempid;
@@ -268,6 +286,7 @@ void trier_liste_produits(){
         }
     }
 }
+//fonction pour afficher la liste des produits
 void afficher_liste_produits(){
     if (Li == NULL || Li->tete == NULL) {
         printf("Liste vide ou nulle\n");
@@ -280,8 +299,9 @@ void afficher_liste_produits(){
         ptr=ptr->suivant;
     }
 }
+//fonction pour modifier les infos d'un produit
 int modifier_produit(int id , float prix , int quantite){
-    Produit *p =rechercher_par_ID(id);
+    Produit *p =rechercher_par_ID(id);//recherche produit a modifie
     if(p==NULL){
         perror("produit introvable");
         return 0;
@@ -290,12 +310,13 @@ int modifier_produit(int id , float prix , int quantite){
     p->quantite=quantite;
     return 1;
 }
+//fonction pour enregistrer la liste des produits dans le fichier
 void enregistrer_liste_produits(){
     if(Li==NULL) {
         perror("Liste non initialisee\n");
         return;
     }
-    FILE *fp = fopen("produits.txt","w");
+    FILE *fp = fopen("produits.txt","w");//ouverture de fichier en mode ecriture
     if(fp==NULL){
         perror("error d'ouverture du fichier des produits\n");
         return;
@@ -311,18 +332,19 @@ void enregistrer_liste_produits(){
             }
         }
     }
-    fclose(fp);
+    fclose(fp);//fermer le fichier
     printf("la liste des produits a ete enregistree\n");
 }
+//fonction pour charger les produits depuis un fichier
 void lire_liste_produits() {
-    FILE *fp = fopen("produits.txt", "r");
+    FILE *fp = fopen("produits.txt", "r");//ouverture de fichier en mode lecture
     if (fp == NULL || table==NULL  || Li==NULL) {
         perror("Erreur ouverture fichier pour lecture des produits\n");
         return;
     }
     Produit *p1;
     int lecture=4;
-    while (lecture == 4) {//scan tout la ligne dans lignetemp
+    while (lecture == 4) {
         p1=(Produit*)malloc(sizeof(Produit));
         if(!p1) {
             perror("Erreur d'allocation de memoire pour le produit\n");
@@ -341,7 +363,7 @@ void lire_liste_produits() {
             free(p1);
             continue;
         }
-        insererHachage(p1);
+        insererHachage(p1);// insertion dans le tableau de hachage
         p1->suivant = NULL;
         p1->precedent = Li->queue;
         if (Li->tete == NULL) {
@@ -362,7 +384,7 @@ void liberer_memoire() {
         Produit *courant = Li->tete;
         Produit *suivant=NULL;
         while (courant != NULL) {
-            suivant = courant->suivant;
+            suivant = courant->suivant;//vider produit par produit
             free(courant);
             courant = suivant;
             compteur++;
@@ -371,13 +393,16 @@ void liberer_memoire() {
         Li = NULL;
         printf("%d produits liberes\n", compteur);
     }
+    //vider le taleau de hachage
     if (table != NULL) {
         free(table);
         table = NULL;
-        printf("Table de hachage liberee\n");
+        printf("Table de hachage libere\n");
     }
 }
-//________________________________________________________________
+
+//____________________________________________________________
+//menu pour l affichage des produit
 void menu_afficher() {
     int choix;
     do {
@@ -410,6 +435,7 @@ void menu_afficher() {
         }
     } while(choix != 3);
 }
+//menue de recheche d un produit
 void menu_rechercher() {
     int choix, id;
     char nom[30];
@@ -452,6 +478,7 @@ void menu_rechercher() {
         }
     } while(choix != 3);
 }
+//menue pour modifier les infos d un produit
 void menu_modifier() {
     int id, quantite;
     float prix;
@@ -491,6 +518,7 @@ void menu_modifier() {
         printf("Echec de la modification\n");
     }
 }
+//Menue pour gestion des produits
 void menu_produit(){
     int choix;
     do {
@@ -543,10 +571,11 @@ void menu_produit(){
                 printf("\n=== ENREGISTREMENT DANS FICHIER ===\n");
                 enregistrer_liste_produits();
                 break;
-            case 7:
+            case 7:{
                 printf("\n=== CHARGEMENT DEPUIS FICHIER ===\n");
                 lire_liste_produits();
                 break;
+            }
             case 0:
                 break;
             default:
@@ -554,82 +583,7 @@ void menu_produit(){
         }
     } while(choix != 0);
 }
-//_____________________________________________________________________________________________
-//gestion des clients
-//fonction initialiser une file
-File *initialiserFile(){
-    File *nv_file = (File*)malloc(sizeof(File));
-    if(!nv_file){
-        printf("erreur d'allocation de la memoire pour la file.\n");
-        return NULL;
-    }
-    nv_file->tete = NULL;
-    nv_file->queue = NULL;
-    nv_file->taille = 0;
-    return nv_file;
-}
-// fct verifier si la file est vide
-int estVideFile(){
-    if(file->taille > 0)
-        return file->taille;
-    return 0;
-}
-//fct enfiler un client dans la file
-void enfiler(Client *C){
-    if( file == NULL || C == NULL){
-        printf("erreur, la file est null ou client est null.\n");
-        return;
-    }
-    ElementClient *ptr = (ElementClient*)malloc(sizeof(ElementClient));
-    if( ptr == NULL ){
-        printf("echec d'allocation\n");
-        return;}
-    ptr->El_Client = C;
-    ptr->suivant = NULL;
-    if(estVideFile(file) == 0){//la liste est vide
-        file->tete = ptr;
-        file->queue = ptr;
-    }else{
-        file->queue->suivant = ptr;
-        file->queue = ptr;
-    }
-    printf("ajout du client au file avec succes.\n");
-    file->taille++;
-}
-//fct affichage des client en file d'attente
-void afficherFile(){
-    if( file == NULL || estVideFile() == 0){
-        printf("erreur, la file est null ou vide.\n");
-        return;
-    }
-    ElementClient *ptr = (ElementClient*)malloc(sizeof(ElementClient));
-    if( ptr == NULL ){
-        printf("echec d'allocation\n");
-        return;
-    }
-    ptr = file->tete ;
-    do{
-        printf("client %d : %s || %.2f.\n",ptr->El_Client->id,ptr->El_Client->nom,ptr->El_Client->totalDepense);
-        ptr = ptr->suivant;
-    } while (ptr != NULL);
-}
-//fct defiler un client de la file
-Client *defiler(){
-    if( file == NULL || estVideFile() == 0){
-        printf("erreur, la file est null ou vide.\n");
-        return NULL;
-    }
-    ElementClient *temp = file->tete;
-    Client *Cl = temp->El_Client;
-    file->tete = temp->suivant;
-    file->taille--;
-    if(file->tete == NULL){//traiter le cas si on defile la seule element dans la file
-        file->queue = NULL;
-    }
-    free(temp);
-    return Cl;
-}
-//---------------------------------------------
+//----------------------------gestion des clients------------------------------------
 //fonction creation d'un arbre VIDE
 Arbre_Client *Creer_Arbre(){
     Arbre_Client *Ar = (Arbre_Client*)calloc(1,sizeof(Arbre_Client));
@@ -647,21 +601,21 @@ Client *Creer_Client(){
         printf("echec d'allocation de la memoire pour le Client.\n");
         return NULL;
     }
-    printf("entrer l'identificateur du client: ");
+    printf("entrer l'Id (Id>0): ");
     do{
         scanf("%d",&Cl->id);
         if(Cl->id <= 0){
-            printf("l'id doit etre positive;vieullez ressayez: \n");
+            printf("ID doit etre strictement positif; VEUILLEZ RESSAYER: \n");
         }
     }while(Cl->id <= 0);
-    printf("entrer le nom du client: ");
+    printf("Nom: ");
     scanf("%s",Cl->nom);
     Cl->totalDepense = 0;
     Cl->gauche = NULL;
     Cl->droite = NULL;
     return Cl;
 }
-//ajouter un client
+//fonction ajouter un client par ordre des noms
 Client *Ajouter_Client(Client *racine, Client *Cl){
     if(racine == NULL){
         return Cl;
@@ -674,7 +628,7 @@ Client *Ajouter_Client(Client *racine, Client *Cl){
     return racine;
 }
 //fonction recherche a un client par son identificateur
-Client *Rechercher_Id_Client(Client *racine, int Id){///// a expliquer ----------------------------------
+Client *Rechercher_Id_Client(Client *racine, int Id){
     Client *resultat = NULL;
     if( racine == NULL ){
         return NULL;
@@ -780,7 +734,7 @@ void Enregistre_Client_fichier(){
     printf("les clients Sont enregistraient dans le fichier clients\n");
     fclose(pfile);
 }
-//fct extraire l'arbre depuis un fichier texte
+//fct lecture l'arbre depuis un fichier texte
 void Extraire_Arbre_Client(){
     FILE *pfile;
     pfile = fopen("Clients.txt","r");
@@ -807,6 +761,79 @@ void Extraire_Arbre_Client(){
     printf("les clients sont extraient dans le fichier clients\n");
     fclose(pfile);
 }
+//fonction initialise une file d'attente
+File *initialiserFile(){
+    File *nv_file = (File*)malloc(sizeof(File));
+    if(!nv_file){
+        printf("erreur d'allocation de la memoire pour la file.\n");
+        return NULL;
+    }
+    nv_file->tete = NULL;
+    nv_file->queue = NULL;
+    nv_file->taille = 0;
+    return nv_file;
+}
+// fct verifier si la file est vide
+int estVideFile(){
+    if(file->taille > 0)
+        return file->taille;
+    return 0;
+}
+//fct met un client dans la file d'attente
+void enfiler(Client *C){
+    if( file == NULL || C == NULL){
+        printf("erreur, la file est null ou client est null.\n");
+        return;
+    }
+    ElementClient *ptr = (ElementClient*)malloc(sizeof(ElementClient));
+    if( ptr == NULL ){
+        printf("echec d'allocation\n");
+        return;}
+    ptr->El_Client = C;
+    ptr->suivant = NULL;
+    if(estVideFile() == 0){//si la liste est vide,le premier client ajoutee au debut
+        file->tete = ptr;
+        file->queue = ptr;
+    }else{//on ajoute les clients a la fin du la file
+        file->queue->suivant = ptr;
+        file->queue = ptr;
+    }
+    printf("Ajout du client au file avec succes.\n");
+    file->taille++;
+}
+//fct affichage des clients en file d'attente
+void afficherFile(){
+    if( file == NULL || estVideFile() == 0){
+        printf("erreur, la file est null ou vide.\n");
+        return;
+    }
+    ElementClient *ptr = (ElementClient*)malloc(sizeof(ElementClient));
+    if( ptr == NULL ){
+        printf("echec d'allocation\n");
+        return;
+    }
+    ptr = file->tete ;
+    do{ //parcourir la file du tete jusqu'a la queue
+        printf("client %d : %s || %.2f.\n",ptr->El_Client->id,ptr->El_Client->nom,ptr->El_Client->totalDepense);
+        ptr = ptr->suivant;
+    } while (ptr != NULL);
+}
+//fct defiler un client de la file
+Client *defiler(){
+    if( file == NULL || estVideFile() == 0){
+        printf("erreur, la file est null ou vide.\n");
+        return NULL;
+    }
+    ElementClient *temp = file->tete;//declare un element temporaire point sur la debut du file
+    Client *Cl = temp->El_Client;
+    file->tete = temp->suivant;
+    file->taille--;
+    if(file->tete == NULL){//traiter le cas si on defile la seule element dans la file
+        file->queue = NULL;
+    }
+    free(temp);
+    return Cl;
+}
 // fonction libirer Arbre
 void libirer_arbre(Client *racine) {
     if (racine == NULL) {
@@ -816,6 +843,7 @@ void libirer_arbre(Client *racine) {
     libirer_arbre(racine->droite);// libiration du sous-arbre droite
     free(racine);//liberation du noueud actuel
 }
+//menue gestion des clients
 void menu_client(){
     int choix;
     do{
@@ -876,8 +904,7 @@ void menu_client(){
                     }else{
                         printf("le client du nom %s n'existe pas dans l'arbre des clients.\n",nom_rech);
                     }
-                }
-                else{
+                }else{
                     printf("reponse invalide.\n");
                 }
                 break;
@@ -918,9 +945,9 @@ void menu_client(){
                 printf("entrer l'id du client: ");
                 scanf("%d",&id_client);
                 Client *Cl = Rechercher_Id_Client(Ar->racine, id_client);
-                if (Cl != NULL) { //verification si le client existe dans l'arbre
+                if (Cl != NULL){ //verification si le client existe dans l'arbre
                     enfiler(Cl);
-                }else{//le cas d'un nouveau client
+                }else{  //le cas d'un nouveau client
                     ElementClient *ptr = (ElementClient*)malloc(sizeof(ElementClient));
                     Client *Cl = (Client*)malloc(sizeof(Client));
                     if(ptr==NULL || Cl==NULL){
@@ -945,16 +972,16 @@ void menu_client(){
                 printf("voici les client en file d'attente:\n");
                 afficherFile();
                 break;
-                }
+            }
             case 0:
                 break;
-            default :
+            default:
                 printf("choix invalide veuillez ressayer.\n");
         }
     }while(choix != 0);
 }
 //_____________________________________________________________________________________________
-//---------------------------------------------------
+//affichage de la date et l'heure(pour le ticket et transactions)
 void obtenir_date_actuelle(char *date){
     time_t t=time(NULL);
     struct tm *tmp=localtime(&t);
@@ -969,35 +996,41 @@ Pile *initialiser_pile(){
     p->taille_Pile = 0;
     return p;
 }
+//verifier si la pile est vide
 int estVidepile() {
     return (p->tete == NULL);
 }
+//creation de la transaction a empiler
 Transaction *creer_transaction(){
     Transaction *T=(Transaction*)calloc(1,sizeof(Transaction));
     if(!T) exit(1);
     T->suivant=NULL;
     return T;
 }
-void empiler(Transaction *T){//empiler dans la pile
+//empiler la transaction
+void empiler(Transaction *T){
     T->suivant = p->tete;
-    p->tete = T;//la tete de la pile contient recente historique
+    p->tete = T;//la tete de la pile contient la transaction recente
     p->taille_Pile++;
 }
+//depiler la derniere transaction
 Transaction *depiler() {
     if (estVidepile()) return NULL;
     Transaction *T = p->tete;
-    p->tete = T->suivant;
+    p->tete = T->suivant;//reajuster la tete de la pile
     p->taille_Pile--;
-    return T; // on retourne directement
+    return T;  //recuperer la derniere transaction T
 }
+//affichage du ticket a partir du fichier
 void afficher_ticket(int idC){
     char nomfich[50];
-    sprintf(nomfich,"ticket_client_%d.text",idC);
+    sprintf(nomfich,"ticket_client_%d.text",idC);//le nom du fichier dpend d id du client concerner
     FILE *f = fopen(nomfich, "r");
     if(f==NULL) {
         perror("Echec d'ouverture");
         return;
     }
+    //lecture du fichier
     int c;
     while( (c = fgetc(f) ) != EOF){
         putchar(c);
@@ -1005,6 +1038,7 @@ void afficher_ticket(int idC){
     fclose(f);
     return;
 }
+//acht des produits par le client
 char ajouter_panier(char rep){
     printf("voulez vous ajouter un autre produit (o/O) ou (n/N): ");
     do{
@@ -1014,7 +1048,7 @@ char ajouter_panier(char rep){
     }while(!(rep=='n'|| rep=='N' || rep=='o'|| rep=='O'));
     return rep;
 }
-
+//servire le premier client arriver a la file d'attente
 void servir_client(){
     Client *Cl = defiler(file);
     if (Cl==NULL) {
@@ -1022,7 +1056,9 @@ void servir_client(){
         return;
     }
     Client *C = Rechercher_Id_Client(Ar->racine, Cl->id);
+    //generer un ticket pour le client
     char nomfich[50];
+    //nommer le fichier par l'id du client concerner
     sprintf(nomfich,"ticket_client_%d.text",C->id);
     FILE *teckit=fopen(nomfich,"w");
     if(!teckit){
@@ -1030,19 +1066,19 @@ void servir_client(){
         return ;
     }
     char DATE[20];
-    obtenir_date_actuelle(DATE);
+    obtenir_date_actuelle(DATE);//affichage de la date
     fprintf(teckit,"\n====TICKIT DU CLIENT ID: %d ==== DATE : %s \n",C->id,DATE);
     fprintf(teckit,"ID_PRODUIT | Quantite | TOTAL \n");
     char rep = 'o';
     Produit *prd = NULL;
     Produit *prd_liste=NULL;
     while(rep=='o'|| rep=='O'){
-        Transaction *T= creer_transaction();
+        Transaction *T= creer_transaction();//transaction pour chaque achat
         T->idClient=C->id;
         printf("ID du produit(ID>0) :");
         do{
             scanf("%d",&T->idProduit);
-            prd= rechercher_par_ID(T->idProduit);
+            prd= rechercher_par_ID(T->idProduit);//recheche du produit demander par le client
             if(T->idProduit<=0){
                 printf("ID doit etre strictement positif! veuillez ressayer:\n");
             }
@@ -1052,25 +1088,25 @@ void servir_client(){
         } while (T->idProduit<=0 || prd == NULL);
         printf("QUANTITE :");
         do{
-           scanf("%d",&T->quantite);
+           scanf("%d",&T->quantite);//quantite demander
             if(T->quantite<=0){
                 printf("QUANTITE doit etre strictement positive! veuillez ressayer: \n");
             }
         } while (T->quantite<=0);
-        prd_liste =rechercher_par_nom(prd->nom);
-        if(prd->quantite >= T->quantite){//premier test
-            T->total = T->quantite * prd->prix;
-            C->totalDepense+=T->total;
-            prd->quantite-=T->quantite;
-            prd_liste->quantite-=T->quantite;
+        prd_liste =rechercher_par_nom(prd->nom);//recuperer le nom du produit
+        if(prd->quantite >= T->quantite){//la quntite demander est disponible
+            T->total = T->quantite * prd->prix;//calcule de prix total de la transaction
+            C->totalDepense+=T->total; //modification du total depense
+            prd->quantite-=T->quantite;//modifier la quantite du produit dans table de hachage(le stockage)
+            prd_liste->quantite-=T->quantite;//modifier la quantite du produit dans la liste(le stockage)
             obtenir_date_actuelle(T->date);
-            fprintf(teckit,"%d\t|\t%d\t|\t%.2f\n",T->idProduit,T->quantite,T->total);
-            empiler(T);
+            fprintf(teckit,"%d\t|\t%d\t|\t%.2f\n",T->idProduit,T->quantite,T->total);//les infos du ticket
+            empiler(T);//empiler la transaction
             rep = ajouter_panier(rep);
-        }else if(prd->quantite == 0){
+        }else if(prd->quantite == 0){//la quantite du produit est nulle
             printf("le produit d ID:%d est terminer\n",prd->id);
             rep = ajouter_panier(rep);
-        }else{
+        }else{//la quantite n est pas suffisante
             printf("la quantite disponible est %d ,voulez vous la prendre ?(o/O) ou (n/N):",prd->quantite);
             scanf(" %c",&rep);
             if( rep == 'o'|| rep == 'O'){
@@ -1086,10 +1122,11 @@ void servir_client(){
             }else{rep = ajouter_panier(rep);}
         }
     }
-    fprintf(teckit,"TOTAL CLIENT : %.2f\n",C->totalDepense);
+    fprintf(teckit,"TOTAL CLIENT : %.2f\n",C->totalDepense);//le total de tous les achats
     fclose(teckit);
-    afficher_ticket(C->id);
+    afficher_ticket(C->id);//affichage du ticket par lecture du fichier
 }
+//Affichage des transactions
 void afficher_historique() {
     Transaction *T=(Transaction*)malloc(sizeof(Transaction));
     if(T==NULL){
@@ -1103,21 +1140,23 @@ void afficher_historique() {
     }
     while(T!=NULL){
         Client *Cl= Rechercher_Id_Client(Ar->racine, T->idClient);
+        //les infoos de la transaction
+        printf("Id_client: %d |Nom_client: %s |Totale: %.2f |Date: %s \n",T->idClient,Cl->nom,T->total,T->date);
         printf("Id_client: %d |Nom_client: %s |Totale: %.2f |Date: %s \n",T->idClient,Cl->nom,T->total,T->date);
         T=T->suivant;
     }
     return;
 }
 void annulation_transaction(){
-    Transaction *annuler =depiler();
+    Transaction *annuler =depiler();//stocker les infos de transaction a annuler
     if(annuler == NULL){
         printf("Aucune transaction a annuler.\n");
         return;
     }
-    Produit *p=rechercher_par_ID(annuler->idProduit);
-    Client *c=Rechercher_Id_Client(Ar->racine,annuler->idClient);
-    p->quantite+=annuler->quantite;
-    c->totalDepense-=annuler->total;
+    Produit *p=rechercher_par_ID(annuler->idProduit);//recherche du produit de la transaction annuler
+    Client *c=Rechercher_Id_Client(Ar->racine,annuler->idClient);//recherche du client de la transaction annuler
+    p->quantite+=annuler->quantite;//reajouster la quantite du produit(retour en stock)
+    c->totalDepense-=annuler->total;//reajouster le total depense du client
     printf("la transaction est annuler avec succes.\n");
     free(annuler);
 }
@@ -1128,7 +1167,7 @@ void enregistrer_historique(){
         return;
     }
     FILE *f;
-    f=fopen("historique.txt","w");
+    f=fopen("historique.txt","w"); //ouverturee de fichier du transaction
     Transaction *T= (Transaction*)malloc(sizeof(Transaction));
     if(f==NULL || T==NULL){
         perror("echec d'ouverture:\n");
@@ -1137,6 +1176,7 @@ void enregistrer_historique(){
     T =p->tete;
     while(T!=NULL){
         Client *Cl= Rechercher_Id_Client(Ar->racine, T->idClient);
+        //Enregestrer les infode chaque t
         fprintf(f,"Id_client: %d |Nom_client: %s |Totale: %.2f |Date: %s \n",T->idClient,Cl->nom,T->total,T->date);
         if(ferror(f)){
             perror("erreur\n");
@@ -1150,11 +1190,11 @@ void menu_passage_en_caise(){
     int choix;
     do{
         printf("\n----passage en caisse----:\n");
-        printf("1.servir le prochaine client:\n");
-        printf("2.afficher historique:\n");
-        printf("3.annulation de la derniere transaction:\n");
-        printf("4.enregistrer l'historique:\n");
-        printf("0.retour menu principal:\n");
+        printf("1.Servir le prochaine client:\n");
+        printf("2.Afficher historique:\n");
+        printf("3.Annulation de la derniere transaction:\n");
+        printf("4.Enregistrer l'historique:\n");
+        printf("0.Retour menu principal:\n");
         printf("choix:  ");
         scanf("%d",&choix);
         switch(choix){
@@ -1199,7 +1239,7 @@ int main(){
             case 2: menu_produit(); break;
             case 3: menu_passage_en_caise(); break;
             case 0: printf("\n=== FIN DU PROGRAMME ===\n"); break;
-            default:printf("choix invalide veuillez ressayer.\n");
+            default: printf("choix invalide veuillez ressayer.\n");
         }
     }while(choix != 0);
     liberer_memoire();
