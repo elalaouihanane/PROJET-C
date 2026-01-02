@@ -958,6 +958,7 @@ void menu_client(){
                     printf("entrer le nom du clients: ");
                     scanf("%s",Cl->nom);
                     Cl->totalDepense = 0;
+                    Ajouter_Client(Ar->racine,Cl);
                     ptr->El_Client = Cl;
                     ptr->suivant = NULL;
                     if(file->taille == 0){
@@ -1141,7 +1142,6 @@ void afficher_historique() {
     while(T!=NULL){
         Client *Cl= Rechercher_Id_Client(Ar->racine, T->idClient);
         //les infoos de la transaction
-        printf("Id_client: %d |Nom_client: %s |Totale: %.2f |Date: %s \n",T->idClient,Cl->nom,T->total,T->date);
         printf("Id_client: %d |Nom_client: %s |Totale: %.2f |Date: %s \n",T->idClient,Cl->nom,T->total,T->date);
         T=T->suivant;
     }
