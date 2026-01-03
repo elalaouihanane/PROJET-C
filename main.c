@@ -737,7 +737,7 @@ void Enregistre_Client_fichier(){
 //fct lecture l'arbre depuis un fichier texte
 void Extraire_Arbre_Client(){
     FILE *pfile;
-    pfile = fopen("Clients.txt","r");
+    pfile = fopen("C:\\Users\\admin\\Documents\\ds\\clients.txt","r");
     if(!pfile){
         printf("echec d'ouverture du fichier");
         return ;
@@ -958,6 +958,8 @@ void menu_client(){
                     printf("entrer le nom du clients: ");
                     scanf("%s",Cl->nom);
                     Cl->totalDepense = 0;
+                    Cl->droite=NULL;
+                    Cl->gauche=NULL;
                     Ajouter_Client(Ar->racine,Cl);
                     ptr->El_Client = Cl;
                     ptr->suivant = NULL;
